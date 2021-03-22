@@ -10,7 +10,7 @@ import re, nlpnet, pickle, nltk
 
 
 nltk.download('punkt')
-nlpnet.set_data_dir('modelos/pos-pt/')
+nlpnet.set_data_dir('models/pos-pt/')
 
 def mask_number(word):
   if word.isnumeric():
