@@ -10,8 +10,8 @@ import re, nlpnet, pickle, nltk
 import urllib.request, tarfile
 
 local_file, html = urllib.request.urlretrieve('http://nilc.icmc.usp.br/nlpnet/data/pos-pt.tgz',
-                                              filename='./pos-tag')
-tarfile.open(local_file).extractall("./models/")
+                                              filename='pos-tag')
+tarfile.open(local_file).extractall("models/")
 
 nltk.download('punkt')
 nlpnet.set_data_dir('models/pos-pt/')
