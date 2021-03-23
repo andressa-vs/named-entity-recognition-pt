@@ -76,7 +76,7 @@ def find_entities(entities_prediction):
 
 def identify_named_entities(document):
     
-    crfIdentifier = pickle.load(open('modelos/crfClassifier.pkl','rb'))
+    crfIdentifier = pickle.load(open('models/crfClassifier.pkl','rb'))
     
     identification_feats = extract_identification_features(document)
     predicted_entities = crfIdentifier.predict_single(identification_feats)
