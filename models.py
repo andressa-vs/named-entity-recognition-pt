@@ -70,7 +70,7 @@ def NumericFeatureLayer(maxLen, number_features, hidden_dim, featureName=None):
     return model
 
 def OneHotModel(maxLen, number_features, featureName=None):
-    inputs = Input(shape=(maxLen, number_features), dtype=np.float32, name=featureName)
+    inputs = Input(shape=(maxLen, number_features), dtype=np.int32, name=featureName)
     model = Model(inputs=inputs, outputs=inputs)
     
     return model
@@ -94,3 +94,36 @@ def BLSTM_Model(embedding_model, number_categories, features_models=[],
     print(model.summary())
     
     return model
+  
+  class parameters(object):
+    
+    def __init__(self, model_name, scenario, max_len=128, doc_stride=64, lstm_layer=512,
+                 features_dim=75, number_bert_layers=4, num_epochs=50, batch=32,
+                 learning_rate=1e-3):
+        self.model = model_name
+        self.scenario = scenario
+        self.max_len = max_len
+        self.doc_stride = doc_stride
+        self.lstm_layer = lstm_layer
+        self.features_dim = features_dim
+        self.number_bert_layers = number_bert_layers
+        self.num_epochs = num_epochs
+        self.batch = batch
+        self.learning_rate = learning_rate
+        
+    def __repr__(self):
+        s = ("model name: {}\n"
+             "scenario: {}\n"
+             "max len: {}\n"
+             "doc stride: {}\n"
+             "lstm layer: {}\n"
+             "features dim: {}\n"
+             "number bert layers: {}\n"
+             "number epochs: {}\n"
+             "batch: {}\n"
+             "learning rate: {}").format(self.model_name, self.scenario,
+                                         self.max_len, self.doc_stride,
+                                         self.lstm_layer, self.features_dim,
+                                         self.number_bert_layers,self.num_epochs,
+                                         self.batch,self.learning_rate)
+        return s
