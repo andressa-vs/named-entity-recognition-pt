@@ -46,7 +46,7 @@ class Blstm(object):
         if self.number_bert_layers > 1:
             self.output_hidden_states = True
         
-        self.blstm_model = self.generate_model()
+        self.generate_model()
 
         
     def __repr__(self):
@@ -153,10 +153,9 @@ class Blstm(object):
         dropout_layer = Dropout(self.dropout)(blstm)
         outputs = TimeDistributed(Dense(self.num_classes, activation='softmax'))(dropout_layer)
         
-        model = Model(inputs=inputs, outputs=outputs)
-        print(model.summary())
-        
-        return model
+        self.blstm_model = Model(inputs=inputs, outputs=outputs)
+        print(self.blstm_model.summary())
+  
     
     
     def train(self, train_inputs, train_labels, validation_data=(), num_epochs=50, 
