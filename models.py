@@ -19,6 +19,8 @@ tf.disable_eager_execution()
 tf.logging.set_verbosity('ERROR')
 tf.config.experimental.list_physical_devices('GPU')
 
+device_name = tf.test.gpu_device_name()
+print('Found GPU at: {}'.format(device_name))
 
 class Blstm(object):
     
