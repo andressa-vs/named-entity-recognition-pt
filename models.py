@@ -46,7 +46,7 @@ class Blstm(object):
         if self.number_bert_layers > 1:
             self.output_hidden_states = True
         
-        #self.generate_model()
+        self.generate_model()
 
         
     def __repr__(self):
