@@ -80,7 +80,7 @@ class features(object):
         self.scenario = scenario
         self.get_features()
         self.feature_to_index()
-        self.features_names = self.features_dict.keys()
+        self.features_names = [feature for feature in self.features_dict]
     
     def get_features(self):
         self.features_dict = {}
