@@ -89,7 +89,7 @@ class Blstm(object):
         bert_layer.config.output_hidden_states = output_hidden_states
         
         if output_hidden_states:
-          hidden_layers = bert_layer(sequence_inputs)
+          hidden_layers = bert_layer(sequence_inputs)[2]
           selected_layers = hidden_layers[-self.number_bert_layers:]
           sequence_output = tf.keras.layers.Concatenate()(selected_layers)
         else:
