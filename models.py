@@ -123,7 +123,7 @@ class Blstm(object):
     
     def features_layers(self): 
       layers = []
-      features_map = self.map_features
+      features_map = self.features.map_features
       
       for feature in self.features_names:
         feature_name = feature + '_layer'
