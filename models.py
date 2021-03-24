@@ -34,7 +34,7 @@ class Blstm(object):
         self.number_bert_layers = number_bert_layers
         self.trainable_embedding = trainable_embedding
         self.features = features
-        self.features_names = features.features_names
+        self.features_names = features.features_names if self.features != None else []
         self.dropout = dropout
         self.from_pt = False
         self.output_hidden_states = False
