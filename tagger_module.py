@@ -72,39 +72,47 @@ def get_word_case(token):
     
   return wrd_case
 
-
-class features(object):
-    
-    def __init__(self, features, scenario):
-        self.features = features
-        self.scenario = scenario
-        self.get_features()
-        self.feature_to_index()
-        self.features_names = [feature for feature in self.features_dict]
-    
-    def get_features(self):
-        self.features_dict = {}
+def features(features_names, scenario):
         
-        if "ortographic_features" in self.features:
-            self.features_dict["wordTypeFeature"] = ['X'] + WORD_TYPE_TAGS
-            self.features_dict["wordCaseFeature"] = ['X'] + WORD_CASE_TAGS
-        if "pos_tag_feature" in self.features:
-            self.features_dict["posTagFeature"] = ['X'] + POS_TAGS
-        if "word_context_feature" in self.features:
-            out_feats = ['X', 'O']
-            if self.scenario == 'total':
-                self.features_dict["wordContextFeature"] = out_feats + TOTAL_CLASSES
-            elif self.scenario == 'selective':
-                self.features_dict["wordContextFeature"] = out_feats + SELECTIVE_CLASSES
-                
-    def feature_to_index(self):
-        self.map_features = {}
-        
-        for feature, value in self.features_dict.items():
-            self.map_features[feature] = {label:index for index,label in enumerate(value)}
+    def feature_to_index(features):
+        return {label:index for index, label in enumerate(features)}
+    
+    def one_hot_index(features):
+        dic = {}
+        for index, feature in enumerate(features):
+            list_len = [0] * len(features)
+            list_len[index] = 1
+            dic[feature] = list_len
             
-        
+        return dic
+    
+    dic_map_features = {}
+    x = ['X']
+    o = ['O']
 
+    if "ortographic_features" in features_names:
+        type_cats = x + WORD_TYPE_TAGS
+        case_cats = x + WORD_CASE_TAGS
+        
+        dic_map_features['wordTypeFeature'] = feature_to_index(type_cats)
+        dic_map_features['wordCaseFeature'] = feature_to_index(case_cats)
+    
+    if "pos_tag_feature" in features_names:
+        pos_cats = x + POS_TAGS
+        dic_map_features['posTagFeature'] = feature_to_index(pos_cats) 
+    
+    if "word_context_feature" in features_names:
+        out_feats = x + o
+        if scenario == 'total':
+            classes = out_feats + TOTAL_CLASSES
+        elif scenario == 'selective':
+            classes = out_feats + SELECTIVE_CLASSES 
+      
+        dic_map_features["wordContextFeature"] = one_hot_index(classes)
+        
+    return dic_map_features
+            
+            
 def extract_extra_features(doc_tokens, features_names, scenario):
     
     features = defaultdict(list)
