@@ -34,7 +34,6 @@ class Blstm(object):
         self.number_bert_layers = number_bert_layers
         self.trainable_embedding = trainable_embedding
         self.features = features
-        self.features_names = features.features_names if self.features != None else []
         self.dropout = dropout
         self.from_pt = False
         self.output_hidden_states = False
@@ -46,7 +45,7 @@ class Blstm(object):
         if self.number_bert_layers > 1:
             self.output_hidden_states = True
         
-        self.generate_model()
+        #self.generate_model()
 
         
     def __repr__(self):
@@ -67,7 +66,7 @@ class Blstm(object):
                                          self.lstm_layer, self.features_dim,
                                          self.number_bert_layers,
                                          self.trainable_embedding,
-                                         self.features_names, self.num_classes,
+                                         self.features.keys(), self.num_classes,
                                          self.from_pt, self.return_hidden_states,
                                          self.dropout)
         return s
@@ -116,18 +115,17 @@ class Blstm(object):
         return model   
     
     def one_hot_layer(self, number_features, featureName=None):
-        inputs = Input(shape=(self.max_len, number_features), dtype=tf.float32, name=featureName)
+        inputs = Input(shape=(self.max_len, number_features), dtype=np.int32, name=featureName)
         model = Model(inputs=inputs, outputs=inputs)
         
         return model
     
     def features_layers(self): 
       layers = []
-      features_map = self.features.map_features
       
-      for feature in self.features_names:
+      for feature, dic in self.features.items():
         feature_name = feature + '_layer'
-        output_len = len(features_map[feature])
+        output_len = len(dic)
         if feature == 'wordContextFeature':
           layer = self.one_hot_layer(output_len, featureName=feature_name)
         else:
