@@ -14,15 +14,19 @@ import numpy as np
 from tensorflow.keras.optimizers import Adam, schedules
 import tensorflow.compat.v1 as tf
 
+tf.disable_eager_execution()
+tf.logging.set_verbosity('ERROR')
+tf.config.experimental.list_physical_devices('GPU')
+
 
 class Blstm(object):
     
-    def __init__(self, model_name, scenario, num_classes, max_len=128, doc_stride=64, lstm_layer=512,
+    def __init__(self, model_name, scenario, labels, max_len=128, doc_stride=64, lstm_layer=512,
                  features_dim=75, number_bert_layers=4, trainable_embedding=False, 
                  features=None, dropout=0.6):
         self.model_name = model_name
         self.scenario = scenario
-        self.num_classes = num_classes
+        self.labels = labels
         self.max_len = max_len
         self.doc_stride = doc_stride
         self.lstm_layer = lstm_layer
@@ -41,6 +45,9 @@ class Blstm(object):
         if self.number_bert_layers > 1:
             self.output_hidden_states = True
         
+        self.lab_to_ind = self.labels_to_index()
+        self.ind_to_lab = self.index_to_labels()
+        
         self.generate_model()
 
         
@@ -54,7 +61,7 @@ class Blstm(object):
              "number bert layers: {}\n"
              "trainable embedding: {}\n"
              "features names: {}\n"
-             "num_classes: {}\n"
+             "labels: {}\n"
              "from pytorch: {}\n"
              "return hidden states: {}\n"
              "dropout: {}").format(self.model_name, self.scenario,
@@ -62,7 +69,7 @@ class Blstm(object):
                                          self.lstm_layer, self.features_dim,
                                          self.number_bert_layers,
                                          self.trainable_embedding,
-                                         self.features.keys(), self.num_classes,
+                                         self.features.keys(), self.labels,
                                          self.from_pt, self.return_hidden_states,
                                          self.dropout)
         return s
@@ -145,7 +152,7 @@ class Blstm(object):
           
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True))(embedding_layer)
         dropout_layer = Dropout(self.dropout)(blstm)
-        outputs = TimeDistributed(Dense(self.num_classes, activation='softmax'))(dropout_layer)
+        outputs = TimeDistributed(Dense(len(self.classes), activation='softmax'))(dropout_layer)
         
         self.blstm_model = Model(inputs=inputs, outputs=outputs)
         print(self.blstm_model.summary())
@@ -164,16 +171,25 @@ class Blstm(object):
         self.blstm_model.fit(train_inputs, train_labels,
             validation_data= validation_data, epochs= num_epochs,
             batch_size=batch)
+        
+    def labels_to_index(self):
+        return {label: index for index, label in enumerate(self.labels)}
+    
+    def index_to_labels(self):
+        return {index: label for index, label in enumerate(self.labels)}
+        
 
-    def evaluate(self, evaluate_inputs, evaluate_labels, is_max_context, unwanted):
+    def evaluate(self, evaluate_inputs, evaluate_labels, is_max_context, batch_size=32):
         
-        unwanted_labels = [unwanted['X']] 
         
-        logits = self.blstm_model.predict(evaluate_inputs, batch_size=1)
+        x_label = self.lab_to_ind['X']
+        o_label = self.lab_to_ind['O']
+        
+        logits = self.blstm_model.predict(evaluate_inputs, batch_size=batch_size)
                     
-        preds_mask = ((evaluate_labels != unwanted['X']) & (is_max_context))
+        preds_mask = ((evaluate_labels != x_label) & (is_max_context))
         
-        real_preds = [lab if lab not in unwanted_labels else unwanted['O'] for lab in np.argmax(logits[preds_mask], axis=-1)]
+        real_preds = [lab if lab != x_label else o_label for lab in np.argmax(logits[preds_mask], axis=-1)]
         real_labels = evaluate_labels[preds_mask]
           
         return real_labels, real_preds
