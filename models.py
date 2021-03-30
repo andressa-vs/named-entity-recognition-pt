@@ -14,11 +14,6 @@ import numpy as np
 from tensorflow.keras.optimizers import Adam, schedules
 import tensorflow.compat.v1 as tf
 
-tf.disable_eager_execution()
-tf.logging.set_verbosity('ERROR')
-tf.config.experimental.list_physical_devices('GPU')
-
-
 class Blstm(object):
     
     def __init__(self, model_name, scenario, labels, max_len=128, doc_stride=64, lstm_layer=512,
