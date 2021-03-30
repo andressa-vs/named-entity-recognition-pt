@@ -147,7 +147,7 @@ class Blstm(object):
           
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True))(embedding_layer)
         dropout_layer = Dropout(self.dropout)(blstm)
-        outputs = TimeDistributed(Dense(len(self.classes), activation='softmax'))(dropout_layer)
+        outputs = TimeDistributed(Dense(len(self.labels), activation='softmax'))(dropout_layer)
         
         self.blstm_model = Model(inputs=inputs, outputs=outputs)
         print(self.blstm_model.summary())
