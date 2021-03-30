@@ -181,7 +181,7 @@ class Blstm(object):
         
         logits = self.blstm_model.predict(evaluate_inputs, batch_size=batch_size)
                     
-        preds_mask = ((evaluate_labels not in [x_label]) & (is_max_context))
+        preds_mask = ((evaluate_labels != x_label) & (is_max_context))
         
         real_preds = [lab if lab != x_label else o_label for lab in np.argmax(logits[preds_mask], axis=-1)]
         real_labels = evaluate_labels[preds_mask]
