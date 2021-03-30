@@ -115,7 +115,7 @@ class Blstm(object):
         return model   
     
     def one_hot_layer(self, number_features, featureName=None):
-        inputs = Input(shape=(self.max_len, number_features), dtype=np.int32, name=featureName)
+        inputs = Input(shape=(self.max_len, number_features), dtype=np.float32, name=featureName)
         model = Model(inputs=inputs, outputs=inputs)
         
         return model
