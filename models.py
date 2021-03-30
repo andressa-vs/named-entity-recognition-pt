@@ -174,10 +174,10 @@ class Blstm(object):
         return {index: label for index, label in enumerate(self.labels)}
     
     def convert_to_labels(self, ids_list):
-        return [self.index_to_labels[idx] for idx in ids_list]
+        return [self.ind_to_lab[idx] for idx in ids_list]
     
     def convert_to_ids(self, labels_list):
-        return [self.labels_to_index[label] for label in labels_list]
+        return [self.lab_to_ind[label] for label in labels_list]
         
     def evaluate(self, evaluate_inputs, evaluate_labels, is_max_context, batch_size=32):
     
