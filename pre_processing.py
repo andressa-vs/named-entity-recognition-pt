@@ -193,8 +193,7 @@ def convert_example_to_spans(examples,
             span_features["label_ids"] = labels_ids
             span_features['token_is_max_context'] = token_is_max_context
             span_features['doc_span_index'] = doc_span_index
-            span_features['doc_index'] = doc_index
-            span_features['prediction_masks'] = all_prediction_mask
+            span_features['doc_index'] = doc_index 
             for feature, value in extra_features_dic.items():
               span_features[feature] = value
             
