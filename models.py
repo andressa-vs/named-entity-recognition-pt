@@ -177,8 +177,8 @@ class Blstm(object):
     def evaluate(self, evaluate_inputs, evaluate_labels, is_max_context, batch_size=32):
         
         
-        x_label = self.lab_to_ind['X']
-        o_label = self.lab_to_ind['O']
+        x_label = [self.lab_to_ind['X']]
+        o_label = [self.lab_to_ind['O']]
         
         logits = self.blstm_model.predict(evaluate_inputs, batch_size=batch_size)
                     
