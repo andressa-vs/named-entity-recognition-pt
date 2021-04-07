@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jul 19 12:33:34 2019
-
-@author: dressa94
-"""
-
 import pandas as pd
 
 ALL_NAMES = {'PESSOA': ['parentesco', 'profissão', 'pronome'], 
