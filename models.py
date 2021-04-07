@@ -8,7 +8,7 @@ import tensorflow.compat.v1 as tf
 from keras_crf import CRF
 
 
-class BlstmForNER(object):
+class BlstmForNer(object):
     
     def __init__(self, bert_model_path, labels, 
                  max_len=128, 
@@ -149,19 +149,28 @@ class BlstmForNER(object):
         print(self.blstm_model.summary())
         
 
-    def train(self, train_inputs, train_labels, validation_data=(), num_epochs=50, 
-              learning_rate=1e-3, batch=32, decay_steps=1.0, decay_rate=1e-5):
+    def train(self, train_inputs, train_labels, validation_data=(), 
+              num_epochs=50, learning_rate=1e-3, batch=32, 
+              decay_steps=1.0, decay_rate=1e-5,callback=[]):
         
-        schedule = schedules.InverseTimeDecay(learning_rate, decay_steps, 
-                                              decay_rate, staircase=False, 
+        schedule = schedules.InverseTimeDecay(learning_rate, 
+                                              decay_steps, 
+                                              decay_rate, 
+                                              staircase=False, 
                                               name=None)
+        
         optimizer = Adam(learning_rate=schedule)
         
-        self.blstm_model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
+        self.blstm_model.compile(optimizer=optimizer, 
+                                 loss='categorical_crossentropy', 
+                                 metrics=['accuracy'])
 
-        self.blstm_model.fit(train_inputs, train_labels,
-            validation_data= validation_data, epochs= num_epochs,
-            batch_size=batch)
+        self.blstm_model.fit(train_inputs, 
+                             train_labels,
+                             validation_data=validation_data, 
+                             epochs= num_epochs,
+                             batch_size=batch,
+                             callbacks=callback)
         
     def labels_to_index(self):
         return {label: index for index, label in enumerate(self.labels)}
@@ -194,7 +203,7 @@ class BlstmForNER(object):
           
         return real_preds_tags, real_labels_tags
 
-class BlstmForNerCRF(BlstmForNER):
+class BlstmForNerCRF(BlstmForNer):
     
     def __init__(self, bert_model_path, labels, **kwargs):
         super().__init__(bert_model_path, labels, **kwargs)
@@ -221,10 +230,13 @@ class BlstmForNerCRF(BlstmForNER):
         print(self.blstm_model.summary())
         
     def train(self, train_inputs, train_labels, validation_data=(), num_epochs=50, 
-              learning_rate=1e-3, batch=32, decay_steps=1.0, decay_rate=1e-5):
+              learning_rate=1e-3, batch=32, decay_steps=1.0, decay_rate=1e-5,
+              callback=[]):
         
-        schedule = schedules.InverseTimeDecay(learning_rate, decay_steps, 
-                                              decay_rate, staircase=False, 
+        schedule = schedules.InverseTimeDecay(learning_rate, 
+                                              decay_steps, 
+                                              decay_rate, 
+                                              staircase=False, 
                                               name=None)
         optimizer = Adam(learning_rate=schedule)
         
@@ -234,4 +246,4 @@ class BlstmForNerCRF(BlstmForNER):
 
         self.blstm_model.fit(train_inputs, train_labels,
             validation_data= validation_data, epochs= num_epochs,
-            batch_size=batch)
+            batch_size=batch, callbacks=callback)
