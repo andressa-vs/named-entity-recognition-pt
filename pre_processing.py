@@ -1,18 +1,8 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Feb 24 13:43:07 2021
-
-@author: andressa
-"""
-
-
 from collections import namedtuple, defaultdict
 from tagger_module import tag_encoder, extract_extra_features,features
 
 
-
-#Código extraído de https://github.com/anupamsingh610/bert_ner_stride/blob/4865c0229c344ee4e1c70cf03dd1d248ebdd49f9/BERT_NER_STRIDE.py#L249
+#Code extract from https://github.com/anupamsingh610/bert_ner_stride/blob/4865c0229c344ee4e1c70cf03dd1d248ebdd49f9/BERT_NER_STRIDE.py#L249
 
 def check_is_max_context(doc_spans, cur_span_index, position):
     """Check if this is the 'max context' doc span for the token."""
@@ -193,7 +183,8 @@ def convert_example_to_spans(examples,
             span_features["label_ids"] = labels_ids
             span_features['token_is_max_context'] = token_is_max_context
             span_features['doc_span_index'] = doc_span_index
-            span_features['doc_index'] = doc_index 
+            span_features['doc_index'] = doc_index
+            span_features['prediction_masks'] = all_prediction_mask
             for feature, value in extra_features_dic.items():
               span_features[feature] = value
             
