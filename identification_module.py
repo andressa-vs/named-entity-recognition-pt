@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Feb 26 14:55:12 2021
-
-@author: andressa
-"""
-
 import re, nlpnet, pickle, nltk
 import urllib.request, tarfile
 
