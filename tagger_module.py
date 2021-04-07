@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Feb 24 17:38:05 2021
-
-@author: andressa
-"""
-
 from collections import defaultdict
 from identification_module import identify_named_entities, pos_tagger
 from rule_based_module import classify_contexts
@@ -23,7 +15,7 @@ WORD_TYPE_TAGS = ['ALPHA','NUMERIC','ALPHA-NUM','NON-ALPHA']
 WORD_CASE_TAGS = ['UPPER','FIRST-UPPER','LOWER', 'MISC']
 
 TOTAL_CLASSES = ['PESSOA','LOCAL','ORGANIZAÇÃO', 'TEMPO','VALOR','OUTRO',
-           'COISA','ABSTRAÇÃO', 'ACONTECIMENTO']
+           'COISA','ABSTRAÇÃO', 'ACONTECIMENTO', 'OBRA']
 
 SELECTIVE_CLASSES = ['PESSOA','LOCAL','ORGANIZAÇÃO','TEMPO','VALOR']
 
@@ -41,8 +33,8 @@ def tag_encoder(scenario):
     
     for entity_class in classes:
         begin_class = 'B-{}'.format(entity_class[:3])
-        end_class = 'I-{}'.format(entity_class[:3])
-        entities_tags.extend((begin_class, end_class))
+        inside_class = 'I-{}'.format(entity_class[:3])
+        entities_tags.extend((begin_class, inside_class))
         
     return entities_tags
 
