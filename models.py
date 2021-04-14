@@ -1,5 +1,5 @@
 from keras.models import Model
-from keras.layers import Dense, Input, Embedding, LSTM, Bidirectional, TimeDistributed, Dropout, Concatenate
+from keras.layers import Dense, Input, Embedding, LSTM, Bidirectional, TimeDistributed, Dropout, Concatenate, Lambda
 from keras.initializers import RandomUniform
 from transformers import TFBertModel
 import numpy as np
@@ -219,13 +219,14 @@ class BlstmForNerCRF(BlstmForNer):
           embedding_layer = self.bert_model.output
         else:
           models = [self.bert_model] + self.features_models
+          mask = Lambda(lambda x: tf.greater(x, 0))(self.bert_model.input)
           inputs = [model.input for model in models]
           embedding_layer = Concatenate(axis=-1, name='concat_layer')([model.output for model in models])
           
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True))(embedding_layer)
         dropout_layer = Dropout(self.dropout)(blstm)
         time_dist = Dense(self.lstm_layer, activation='relu')(dropout_layer)
-        outputs = self.crf(time_dist,training=True)
+        outputs = self.crf(time_dist,training=True, mask=mask)
         
         self.blstm_model = Model(inputs=inputs, outputs=outputs)
         print(self.blstm_model.summary())
