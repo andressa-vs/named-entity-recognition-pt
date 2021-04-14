@@ -207,7 +207,7 @@ class BlstmForNerCRF(BlstmForNer):
     
     def __init__(self, bert_model_path, labels, **kwargs):
         super().__init__(bert_model_path, labels, **kwargs)
-        self.crf = CRF(len(self.labels), sparse_target=True)
+        self.crf = CRF(len(self.labels))
     
     def build_model(self):
         
