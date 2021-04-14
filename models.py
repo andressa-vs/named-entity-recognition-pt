@@ -222,11 +222,10 @@ class BlstmForNerCRF(BlstmForNer):
           inputs = [model.input for model in models]
           embedding_layer = Concatenate(axis=-1, name='concat_layer')([model.output for model in models])
         
-        sequence_mask = tf.keras.layers.Lambda(lambda x: tf.greater(x, 0))(embedding_layer)
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True))(embedding_layer)
         dropout_layer = Dropout(self.dropout)(blstm)
         time_dist = TimeDistributed(Dense(self.lstm_layer, activation='relu'))(dropout_layer)
-        outputs = self.crf(time_dist, mask=sequence_mask)
+        outputs = self.crf(time_dist)
         
         self.blstm_model = Model(inputs=inputs, outputs=outputs)
         print(self.blstm_model.summary())
