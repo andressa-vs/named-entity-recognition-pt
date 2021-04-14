@@ -1,10 +1,11 @@
-from keras.models import Model
-from keras.layers import Dense, Input, Embedding, LSTM, Bidirectional, TimeDistributed, Dropout, Concatenate, Lambda
-from keras.initializers import RandomUniform
+import tensorflow as tf
+from tf.keras.models import Model
+from tf.keras.layers import Dense, Input, Embedding, LSTM, Bidirectional, TimeDistributed, Dropout, Concatenate, Lambda
+from tf.keras.initializers import RandomUniform
 from transformers import TFBertModel
 import numpy as np
-from tensorflow.keras.optimizers import Adam, schedules
-import tensorflow.compat.v1 as tf
+from tf.keras.optimizers import Adam, schedules
+
 from keras_crf import CRF
 
 
