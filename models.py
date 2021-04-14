@@ -5,7 +5,7 @@ from transformers import TFBertModel
 import numpy as np
 from tensorflow.keras.optimizers import Adam, schedules
 import tensorflow.compat.v1 as tf
-from keras_crf import CRF
+from keras_contrib.layers import CRF
 
 
 class BlstmForNer(object):
@@ -221,7 +221,7 @@ class BlstmForNerCRF(BlstmForNer):
           models = [self.bert_model] + self.features_models
           inputs = [model.input for model in models]
           embedding_layer = Concatenate(axis=-1, name='concat_layer')([model.output for model in models])
-        
+          
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True))(embedding_layer)
         dropout_layer = Dropout(self.dropout)(blstm)
         time_dist = TimeDistributed(Dense(self.lstm_layer, activation='relu'))(dropout_layer)
@@ -242,7 +242,7 @@ class BlstmForNerCRF(BlstmForNer):
         optimizer = Adam(learning_rate=schedule)
         
         self.blstm_model.compile(optimizer=optimizer, 
-                                 loss=self.crf.neg_log_likelihood,
+                                 loss=self.crf.loss_function,
                                  metrics=[self.crf.accuracy])
 
         self.blstm_model.fit(train_inputs, train_labels,
