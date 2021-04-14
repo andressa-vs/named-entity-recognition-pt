@@ -128,7 +128,7 @@ class BlstmForNer(object):
         
       return layers
   
-    def build_model(self):
+    def _build_model(self):
         
         self.features_models = self.features_layers()
         self.bert_model = self.bert_embedding_layer()
@@ -209,7 +209,7 @@ class BlstmForNerCRF(BlstmForNer):
         super().__init__(bert_model_path, labels, **kwargs)
         self.crf = CRF(len(self.labels))
     
-    def build_model(self):
+    def _build_model(self):
         
         self.features_models = self.features_layers()
         self.bert_model = self.bert_embedding_layer()
@@ -224,7 +224,7 @@ class BlstmForNerCRF(BlstmForNer):
           
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True))(embedding_layer)
         dropout_layer = Dropout(self.dropout)(blstm)
-        time_dist = TimeDistributed(Dense(len(self.lstm_layer), activation='softmax'))(dropout_layer)
+        time_dist = TimeDistributed(Dense(self.lstm_layer, activation='softmax'))(dropout_layer)
         outputs = self.crf(time_dist)
         
         self.blstm_model = Model(inputs=inputs, outputs=outputs)
