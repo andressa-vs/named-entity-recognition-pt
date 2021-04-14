@@ -224,7 +224,8 @@ class BlstmForNerCRF(BlstmForNer):
           
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True))(embedding_layer)
         dropout_layer = Dropout(self.dropout)(blstm)
-        outputs = self.crf(dropout_layer)
+        time_dist = TimeDistributed(Dense(len(self.lstm_layer), activation='softmax'))(dropout_layer)
+        outputs = self.crf(time_dist)
         
         self.blstm_model = Model(inputs=inputs, outputs=outputs)
         print(self.blstm_model.summary())
