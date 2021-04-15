@@ -130,10 +130,10 @@ class BlstmForNer(object):
       return layers
   
     def _build_model(self):
-        
-        self.features_models = self.features_layers()
+       
         self.bert_model = self.bert_embedding_layer()
-    
+        self.features_models = self.features_layers()
+        
         if self.features_models == []:
           inputs = self.bert_model.input
           embedding_layer = self.bert_model.output
@@ -210,11 +210,12 @@ class BlstmForNerCRF(BlstmForNer):
         super().__init__(bert_model_path, labels, **kwargs)
         self.crf = CRF(len(self.labels))
     
-    def _build_model(self, mask=[]):
-        
-        self.features_models = self.features_layers()
+    def _build_model(self):
+         
         self.bert_model = self.bert_embedding_layer()
-    
+        self.features_models = self.features_layers()
+        self.mask_layer = Lambda(lambda x: tf.greater(x,0))(self.bert_model.input[1])
+        
         if self.features_models == []:
           inputs = self.bert_model.input
           embedding_layer = self.bert_model.output
@@ -222,11 +223,12 @@ class BlstmForNerCRF(BlstmForNer):
           models = [self.bert_model] + self.features_models
           inputs = [model.input for model in models]
           embedding_layer = Concatenate(axis=-1, name='concat_layer')([model.output for model in models])
+
           
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True))(embedding_layer)
         dropout_layer = Dropout(self.dropout)(blstm)
         time_dist = TimeDistributed(Dense(self.lstm_layer, activation='relu'))(dropout_layer)
-        outputs = self.crf(time_dist, mask=mask)
+        outputs = self.crf(time_dist, mask=self.mask_layer)
         
         self.blstm_model = Model(inputs=inputs, outputs=outputs)
         print(self.blstm_model.summary())
