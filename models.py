@@ -214,14 +214,15 @@ class BlstmForNerCRF(BlstmForNer):
          
         self.bert_model = self.bert_embedding_layer()
         self.features_models = self.features_layers()
-        self.mask_layer = Lambda(lambda x: tf.greater(x,0))(self.bert_model.input[1])
+        mask_input = Input(shape=(self.max_len,), dtype=tf.int32, name="mask_input")
+        self.mask_layer = Lambda(lambda x: tf.greater(x,0))(mask_input)
         
         if self.features_models == []:
           inputs = self.bert_model.input
           embedding_layer = self.bert_model.output
         else:
           models = [self.bert_model] + self.features_models
-          inputs = [model.input for model in models]
+          inputs = [model.input for model in models] + mask_input
           embedding_layer = Concatenate(axis=-1, name='concat_layer')([model.output for model in models])
 
           
