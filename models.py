@@ -210,11 +210,11 @@ class BlstmForNerCRF(BlstmForNer):
         super().__init__(bert_model_path, labels, **kwargs)
         self.crf = CRF(len(self.labels))
     
-    def _build_model(self, train_masks=[]):
+    def _build_model(self):
          
         self.bert_model = self.bert_embedding_layer()
         self.features_models = self.features_layers()
-        self.mask_layer = Lambda(lambda x: tf.greater(x,0))(train_masks)
+        self.mask_layer = Lambda(lambda x: tf.greater(x,0))(self.bert_model.input[1])
         
         if self.features_models == []:
           inputs = self.bert_model.input
