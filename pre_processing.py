@@ -127,11 +127,13 @@ def convert_example_to_spans(examples,
             labels_ids = []
             segment_ids = []
             token_is_max_context = []
+            prediction_masks = []
             extra_features_dic = {}
             tokens.append('[CLS]')
             labels_ids.append(tags_to_ids['X'])
             segment_ids.append(0)
             token_is_max_context.append(False)
+            prediction_masks.append(0)
           
     
             for feature in all_extra_features:
@@ -143,8 +145,9 @@ def convert_example_to_spans(examples,
                 token_is_max_context.append(is_max_context)
                 tokens.append(all_doc_tokens[split_token_idx])
                 labels_ids.append(tags_to_ids[all_doc_labels[split_token_idx]])
+                prediction_masks.append(int(all_prediction_mask[split_token_idx]))
                 segment_ids.append(0)
-      
+                
                 for feature, value in all_extra_features.items():
                     converted_label = features_dic[feature][value[split_token_idx]]
                     extra_features_dic[feature] += [converted_label]
@@ -160,6 +163,7 @@ def convert_example_to_spans(examples,
                 labels_ids.append(tags_to_ids['X'])
                 tokens.append("X")
                 token_is_max_context.append(False)
+                prediction_masks.append(0)
                 for feature, value in all_extra_features.items():
                     extra_features_dic[feature] += [features_dic[feature]['X']]
       
@@ -168,6 +172,7 @@ def convert_example_to_spans(examples,
             assert len(input_masks) == doc_max_len
             assert len(segment_ids) == doc_max_len
             assert len(labels_ids) == doc_max_len
+            assert len(prediction_masks) == doc_max_len
             
             if extra_features_names != []:
                 for doc_features in extra_features_dic.values():
@@ -184,7 +189,7 @@ def convert_example_to_spans(examples,
             span_features['token_is_max_context'] = token_is_max_context
             span_features['doc_span_index'] = doc_span_index
             span_features['doc_index'] = doc_index
-            span_features['prediction_masks'] = all_prediction_mask
+            span_features['prediction_masks'] = prediction_masks
             for feature, value in extra_features_dic.items():
               span_features[feature] = value
             
