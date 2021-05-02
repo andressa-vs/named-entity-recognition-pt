@@ -214,22 +214,20 @@ class BlstmForNerCRF(BlstmForNer):
          
         self.bert_model = self.bert_embedding_layer()
         self.features_models = self.features_layers()
-        mask_input = Input(shape=(self.max_len,), dtype=tf.int32, name="mask_input")
-        self.mask_layer = Lambda(lambda x: tf.greater(x,0))(mask_input)
         
         if self.features_models == []:
-          inputs = self.bert_model.input + [mask_input]
+          inputs = self.bert_model.input 
           embedding_layer = self.bert_model.output
         else:
           models = [self.bert_model] + self.features_models
-          inputs = [model.input for model in models] + [mask_input]
+          inputs = [model.input for model in models]
           embedding_layer = Concatenate(axis=-1, name='concat_layer')([model.output for model in models])
 
           
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True))(embedding_layer)
         dropout_layer = Dropout(self.dropout)(blstm)
         time_dist = TimeDistributed(Dense(self.lstm_layer, activation='relu'))(dropout_layer)
-        outputs = self.crf(time_dist, mask=self.mask_layer)
+        outputs = self.crf(time_dist)
         
         self.blstm_model = Model(inputs=inputs, outputs=outputs)
         print(self.blstm_model.summary())
