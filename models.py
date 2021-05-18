@@ -224,7 +224,7 @@ class BlstmForNerCRF(BlstmForNer):
           embedding_layer = Concatenate(axis=-1, name='concat_layer')([model.output for model in models])
 
           
-        blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True))(embedding_layer)
+        blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True, dropout=self.dropout))(embedding_layer)
         time_dist = TimeDistributed(Dense(self.lstm_layer, activation='relu'))(blstm)
         normalization = LayerNormalization(1)(time_dist)
         outputs = self.crf(normalization)
@@ -260,7 +260,7 @@ class BlstmForNerCRF(BlstmForNer):
                     
         preds_mask = ((evaluate_labels != [x_label]) & (is_max_context))
         
-        real_preds_idx = [lab if lab != x_label else o_label for lab in np.argmax(logits[preds_mask], axis=-1)]
+        real_preds_idx = [lab if lab != x_label else o_label for lab in logits[preds_mask]]
         real_labels_idx = evaluate_labels[preds_mask]
         
         assert len(real_preds_idx) == len(real_labels_idx)
