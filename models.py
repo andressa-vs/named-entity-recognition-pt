@@ -224,7 +224,7 @@ class BlstmForNerCRF(BlstmForNer):
           embedding_layer = Concatenate(axis=-1, name='concat_layer')([model.output for model in models])
 
           
-        blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True, dropout=self.dropout))(embedding_layer)
+        blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True))(embedding_layer)
         time_dist = TimeDistributed(Dense(self.lstm_layer, activation='relu'))(blstm)
         normalization = LayerNormalization(1)(time_dist)
         outputs = self.crf(normalization)
@@ -238,11 +238,10 @@ class BlstmForNerCRF(BlstmForNer):
               learning_rate=1e-3, batch=32, decay_steps=1.0, decay_rate=1e-5,
               callback=[]):
         
-        schedule = schedules.InverseTimeDecay(learning_rate, 
+        schedule = schedules.ExponentialDecay(learning_rate, 
                                               decay_steps, 
                                               decay_rate, 
-                                              staircase=False, 
-                                              name=None)
+                                              staircase=False)
         optimizer = Adam(learning_rate=schedule)
         
         self.blstm_crf_model.compile(optimizer=optimizer)
