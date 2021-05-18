@@ -1,12 +1,12 @@
 import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, Input, Embedding, LSTM, Bidirectional, TimeDistributed, Dropout, Concatenate, Lambda
+from tensorflow.keras.layers import Dense, Input, Embedding, LSTM, Bidirectional, TimeDistributed, Dropout, Concatenate, Lambda, LayerNormalization
 from tensorflow.keras.initializers import RandomUniform
 from transformers import TFBertModel
 import numpy as np
 from tensorflow.keras.optimizers import Adam, schedules
 
-from keras_crf import CRF
+from tf2crf import CRF, ModelWithCRFLossDSCLoss
 
 
 class BlstmForNer(object):
@@ -214,7 +214,6 @@ class BlstmForNerCRF(BlstmForNer):
          
         self.bert_model = self.bert_embedding_layer()
         self.features_models = self.features_layers()
-        sequence_mask = Lambda(lambda x: tf.greater(x, 0))(self.bert_model.input[1])
         
         if self.features_models == []:
           inputs = self.bert_model.input 
@@ -226,12 +225,14 @@ class BlstmForNerCRF(BlstmForNer):
 
           
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True))(embedding_layer)
-        dropout_layer = Dropout(self.dropout)(blstm)
-        time_dist = TimeDistributed(Dense(self.lstm_layer, activation='relu'))(dropout_layer)
-        outputs = self.crf(time_dist, mask=sequence_mask)
+        time_dist = TimeDistributed(Dense(self.lstm_layer, activation='relu'))(blstm)
+        normalization = LayerNormalization(1)(time_dist)
+        outputs = self.crf(normalization)
         
-        self.blstm_model = Model(inputs=inputs, outputs=outputs)
-        print(self.blstm_model.summary())
+        blstm_model = Model(inputs=inputs, outputs=outputs)
+        self.blstm_crf_model = ModelWithCRFLossDSCLoss(blstm_model, sparse_target=True)
+
+        print(blstm_model.summary())
         
     def train(self, train_inputs, train_labels, validation_data=(), num_epochs=50, 
               learning_rate=1e-3, batch=32, decay_steps=1.0, decay_rate=1e-5,
@@ -244,10 +245,27 @@ class BlstmForNerCRF(BlstmForNer):
                                               name=None)
         optimizer = Adam(learning_rate=schedule)
         
-        self.blstm_model.compile(optimizer=optimizer, 
-                                 loss=self.crf.neg_log_likelihood,
-                                 metrics=[self.crf.accuracy])
+        self.blstm_crf_model.compile(optimizer=optimizer)
 
-        self.blstm_model.fit(train_inputs, train_labels,
+        self.blstm_crf_model.fit(train_inputs, train_labels,
             validation_data= validation_data, epochs= num_epochs,
             batch_size=batch, callbacks=callback)
+
+    def evaluate(self, evaluate_inputs, evaluate_labels, is_max_context, batch_size=32):
+    
+        x_label = self.lab_to_ind['X']
+        o_label = self.lab_to_ind['O']
+        
+        logits = self.blstm_crf_model.predict(evaluate_inputs, batch_size=batch_size)
+                    
+        preds_mask = ((evaluate_labels != [x_label]) & (is_max_context))
+        
+        real_preds_idx = [lab if lab != x_label else o_label for lab in np.argmax(logits[preds_mask], axis=-1)]
+        real_labels_idx = evaluate_labels[preds_mask]
+        
+        assert len(real_preds_idx) == len(real_labels_idx)
+        
+        real_preds_tags = self.convert_to_labels(real_preds_idx)
+        real_labels_tags = self.convert_to_labels(real_labels_idx)
+          
+        return real_preds_tags, real_labels_tags
