@@ -243,7 +243,7 @@ class BlstmForNerCRF(BlstmForNer):
                                               decay_steps, 
                                               decay_rate, 
                                               staircase=False)
-        optimizer = Adam(learning_rate=learning_rate)
+        optimizer = Adam(learning_rate=schedule)
         
         self.blstm_crf_model.compile(optimizer=optimizer)
 
