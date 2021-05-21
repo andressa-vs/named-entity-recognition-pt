@@ -232,8 +232,8 @@ class BlstmForNerCRF(BlstmForNer):
           
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True, kernel_regularizer=l2(reg_rate),
                                   recurrent_regularizer=l2(reg_rate)))(embedding_layer)
-        #dropout_layer = Dropout(self.dropout)(blstm)
-        time_dist = TimeDistributed(Dense(self.lstm_layer, activation='relu'))(blstm)
+        dropout_layer = Dropout(self.dropout)(blstm)
+        time_dist = TimeDistributed(Dense(self.lstm_layer, activation='relu'))(dropout_layer)
         outputs = self.crf(time_dist)
         
         blstm_model = Model(inputs=inputs, outputs=outputs)
