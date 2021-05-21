@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, Input, Embedding, LSTM, Bidirectional, TimeDistributed, Dropout, Concatenate, Lambda, LayerNormalization
+from tensorflow.keras.layers import Dense, Input, Embedding, LSTM, Bidirectional, TimeDistributed, Dropout, Concatenate
+from tensorflow.keras.regularizers import l2
 from tensorflow.keras.initializers import RandomUniform
 from transformers import TFBertModel
 import numpy as np
@@ -18,7 +19,8 @@ class BlstmForNer(object):
                  number_bert_layers=4, 
                  bert_is_trainable=False, 
                  features=None, 
-                 dropout=0.6):
+                 dropout=0.6,
+                 regularization_rate=0.01):
         
         self.bert_model_path = bert_model_path
         self.labels = labels
@@ -30,6 +32,7 @@ class BlstmForNer(object):
         self.features = features
         self.dropout = dropout
         self.from_pt = False
+        self.regularization_rate = regularization_rate
         self.output_hidden_states = False
         
         bert_portuguese_cased = 'neuralmind/bert-base-portuguese-cased'
@@ -55,14 +58,16 @@ class BlstmForNer(object):
              "labels: {}\n"
              "from pytorch: {}\n"
              "return hidden states: {}\n"
-             "dropout: {}").format(self.bert_model_path, 
+             "dropout: {}\n"
+             "regularization rate: {}").format(self.bert_model_path, 
                                    self.max_len, 
                                     self.lstm_layer, self.features_dim,
                                     self.number_bert_layers,
                                     self.bert_is_trainable,
                                     self.features.keys(), self.labels,
                                     self.from_pt, self.return_hidden_states,
-                                    self.dropout)
+                                    self.dropout,
+                                    self.regularization_rate)
         return s
     
     
@@ -206,7 +211,7 @@ class BlstmForNer(object):
 
 class BlstmForNerCRF(BlstmForNer):
     
-    def __init__(self, bert_model_path, labels, **kwargs):
+    def __init__(self, bert_model_path, labels,**kwargs):
         super().__init__(bert_model_path, labels, **kwargs)
         self.crf = CRF(len(self.labels))
     
@@ -214,6 +219,7 @@ class BlstmForNerCRF(BlstmForNer):
          
         self.bert_model = self.bert_embedding_layer()
         self.features_models = self.features_layers()
+        reg_rate = self.regularization_rate
         
         if self.features_models == []:
           inputs = self.bert_model.input 
@@ -224,11 +230,11 @@ class BlstmForNerCRF(BlstmForNer):
           embedding_layer = Concatenate(axis=-1, name='concat_layer')([model.output for model in models])
 
           
-        blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True))(embedding_layer)
-        dropout_layer = Dropout(self.dropout)(blstm)
-        time_dist = TimeDistributed(Dense(self.lstm_layer, activation='relu'))(dropout_layer)
-        normalization = LayerNormalization(1)(time_dist)
-        outputs = self.crf(normalization)
+        blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True, kernel_regularizer=l2(reg_rate),
+                                  recurrent_regularizer=l2(reg_rate)))(embedding_layer)
+        #dropout_layer = Dropout(self.dropout)(blstm)
+        time_dist = TimeDistributed(Dense(self.lstm_layer, activation='relu'))(blstm)
+        outputs = self.crf(time_dist)
         
         blstm_model = Model(inputs=inputs, outputs=outputs)
         self.blstm_crf_model = ModelWithCRFLossDSCLoss(blstm_model, sparse_target=True)
