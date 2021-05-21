@@ -237,7 +237,7 @@ class BlstmForNerCRF(BlstmForNer):
         outputs = self.crf(time_dist)
         
         blstm_model = Model(inputs=inputs, outputs=outputs)
-        self.blstm_crf_model = ModelWithCRFLossDSCLoss(blstm_model, sparse_target=True)
+        self.blstm_crf_model = ModelWithCRFLoss(blstm_model, sparse_target=True)
 
         print(blstm_model.summary())
         
