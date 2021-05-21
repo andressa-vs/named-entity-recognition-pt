@@ -7,7 +7,7 @@ from transformers import TFBertModel
 import numpy as np
 from tensorflow.keras.optimizers import Adam, schedules
 
-from tf2crf import CRF, ModelWithCRFLossDSCLoss
+from tf2crf import CRF, ModelWithCRFLoss
 
 
 class BlstmForNer(object):
