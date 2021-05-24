@@ -237,7 +237,7 @@ class BlstmForNerCRF(BlstmForNer):
         
         blstm_model = Model(inputs=inputs, outputs=outputs)
         self.blstm_crf_model = CRFModel(blstm_model, len(self.labels))
-        self.blstm_crf_model.build(tf.TensorShape([None, self.max_len, self.lstm_layer]))
+        self.blstm_crf_model.build()
         print(self.blstm_crf_model.summary())
         
         
