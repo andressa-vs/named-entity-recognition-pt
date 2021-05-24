@@ -237,8 +237,8 @@ class BlstmForNerCRF(BlstmForNer):
         
         blstm_model = Model(inputs=inputs, outputs=outputs)
         self.blstm_crf_model = CRFModel(blstm_model, len(self.labels))
-        self.blstm_crf_model.build()
-        print(self.blstm_crf_model.summary())
+        #self.blstm_crf_model.build()
+        print(blstm_model.summary())
         
         
     def train(self, train_inputs, train_labels, validation_data=(), num_epochs=50, 
