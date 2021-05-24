@@ -7,8 +7,7 @@ from transformers import TFBertModel
 import numpy as np
 from tensorflow.keras.optimizers import Adam, schedules
 
-from tf2crf import CRF, ModelWithCRFLoss
-
+from keras_crf import CRFModel
 
 class BlstmForNer(object):
     
@@ -213,7 +212,7 @@ class BlstmForNerCRF(BlstmForNer):
     
     def __init__(self, bert_model_path, labels,**kwargs):
         super().__init__(bert_model_path, labels, **kwargs)
-        self.crf = CRF(len(self.labels))
+   
     
     def _build_model(self):
          
@@ -233,13 +232,14 @@ class BlstmForNerCRF(BlstmForNer):
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True, kernel_regularizer=l2(reg_rate),
                                   recurrent_regularizer=l2(reg_rate)))(embedding_layer)
         dropout_layer = Dropout(self.dropout)(blstm)
-        time_dist = TimeDistributed(Dense(self.lstm_layer, activation='relu'))(dropout_layer)
-        outputs = self.crf(time_dist)
+        outputs = TimeDistributed(Dense(self.lstm_layer, activation='relu'))(dropout_layer)
+
         
         blstm_model = Model(inputs=inputs, outputs=outputs)
-        self.blstm_crf_model = ModelWithCRFLoss(blstm_model, sparse_target=True)
-
-        print(blstm_model.summary())
+        self.blstm_crf_model = CRFModel(blstm_model, self.labels)
+        self.blstm_crf_model.build(tf.TensorShape([None, self.lstm_layer]))
+        print(self.blstm_crf_model.summary())
+        
         
     def train(self, train_inputs, train_labels, validation_data=(), num_epochs=50, 
               learning_rate=1e-3, batch=32, decay_steps=1.0, decay_rate=1e-5,
@@ -251,7 +251,7 @@ class BlstmForNerCRF(BlstmForNer):
                                               staircase=False)
         optimizer = Adam(learning_rate=schedule)
         
-        self.blstm_crf_model.compile(optimizer=optimizer)
+        self.blstm_crf_model.compile(optimizer=optimizer, metrics=['acc'])
 
         self.blstm_crf_model.fit(train_inputs, train_labels,
             validation_data= validation_data, epochs= num_epochs,
