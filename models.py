@@ -7,7 +7,8 @@ from transformers import TFBertModel
 import numpy as np
 from tensorflow.keras.optimizers import Adam, schedules
 
-from keras_crf import CRFModel
+from tf2crf import CRF, ModelWithCRFLossDSCLoss
+
 
 class BlstmForNer(object):
     
@@ -137,6 +138,7 @@ class BlstmForNer(object):
        
         self.bert_model = self.bert_embedding_layer()
         self.features_models = self.features_layers()
+        reg_rate = self.regularization_rate
         
         if self.features_models == []:
           inputs = self.bert_model.input
@@ -146,7 +148,9 @@ class BlstmForNer(object):
           inputs = [model.input for model in models]
           embedding_layer = Concatenate(axis=-1, name='concat_layer')([model.output for model in models])
           
-        blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True))(embedding_layer)
+        blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True,
+                                   kernel_regularizer=l2(reg_rate),
+                                  recurrent_regularizer=l2(reg_rate)))(embedding_layer)
         dropout_layer = Dropout(self.dropout)(blstm)
         outputs = TimeDistributed(Dense(len(self.labels), activation='softmax'))(dropout_layer)
         
@@ -212,7 +216,7 @@ class BlstmForNerCRF(BlstmForNer):
     
     def __init__(self, bert_model_path, labels,**kwargs):
         super().__init__(bert_model_path, labels, **kwargs)
-   
+        self.crf = CRF(len(self.labels))
     
     def _build_model(self):
          
@@ -232,14 +236,13 @@ class BlstmForNerCRF(BlstmForNer):
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True, kernel_regularizer=l2(reg_rate),
                                   recurrent_regularizer=l2(reg_rate)))(embedding_layer)
         dropout_layer = Dropout(self.dropout)(blstm)
-        outputs = TimeDistributed(Dense(self.lstm_layer, activation='relu'))(dropout_layer)
-
+        time_dist = TimeDistributed(Dense(self.lstm_layer, activation='relu'))(dropout_layer)
+        outputs = self.crf(time_dist)
         
         blstm_model = Model(inputs=inputs, outputs=outputs)
-        self.blstm_crf_model = CRFModel(blstm_model, len(self.labels))
-        #self.blstm_crf_model.build()
+        self.blstm_crf_model = ModelWithCRFLossDSCLoss(blstm_model, sparse_target=True)
+
         print(blstm_model.summary())
-        
         
     def train(self, train_inputs, train_labels, validation_data=(), num_epochs=50, 
               learning_rate=1e-3, batch=32, decay_steps=1.0, decay_rate=1e-5,
@@ -251,7 +254,7 @@ class BlstmForNerCRF(BlstmForNer):
                                               staircase=False)
         optimizer = Adam(learning_rate=schedule)
         
-        self.blstm_crf_model.compile(optimizer=optimizer, metrics=['acc'])
+        self.blstm_crf_model.compile(optimizer=optimizer)
 
         self.blstm_crf_model.fit(train_inputs, train_labels,
             validation_data= validation_data, epochs= num_epochs,
@@ -266,7 +269,7 @@ class BlstmForNerCRF(BlstmForNer):
                     
         preds_mask = ((evaluate_labels != [x_label]) & (is_max_context))
         
-        real_preds_idx = [lab if lab != x_label else o_label for lab in np.argmax(logits[preds_mask], axis=-1)]
+        real_preds_idx = [lab if lab != x_label else o_label for lab in logits[preds_mask]]
         real_labels_idx = evaluate_labels[preds_mask]
         
         assert len(real_preds_idx) == len(real_labels_idx)
