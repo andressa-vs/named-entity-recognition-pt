@@ -79,8 +79,8 @@ class BlstmForNer(object):
                                           name="segment_ids")
         
         sequence_inputs = [input_word_ids, input_mask, segment_ids]
-        bert_layer = TFBertModel.from_pretrained(self.bert_model_path,from_pt=from_pt)
-        bert_layer.config.output_hidden_states = output_hidden_states
+        bert_layer = TFBertModel.from_pretrained(self.bert_model_path,from_pt=from_pt,
+                                                 output_hidden_states=self.output_hidden_states)
         
         if output_hidden_states:
           hidden_layers = bert_layer(sequence_inputs)[2]
