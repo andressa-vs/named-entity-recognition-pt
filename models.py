@@ -7,7 +7,7 @@ from transformers import TFBertModel
 import numpy as np
 from tensorflow.keras.optimizers import Adam, schedules
 
-from tf2crf import CRF, ModelWithCRFLossDSCLoss
+from tf2crf import CRF, ModelWithCRFLoss
 
 
 class BlstmForNer(object):
@@ -240,7 +240,7 @@ class BlstmForNerCRF(BlstmForNer):
         outputs = self.crf(time_dist)
         
         blstm_model = Model(inputs=inputs, outputs=outputs)
-        self.blstm_crf_model = ModelWithCRFLossDSCLoss(blstm_model, sparse_target=True)
+        self.blstm_crf_model = ModelWithCRFLoss(blstm_model, sparse_target=True)
 
         print(blstm_model.summary())
         
@@ -270,67 +270,6 @@ class BlstmForNerCRF(BlstmForNer):
         preds_mask = ((evaluate_labels != [x_label]) & (is_max_context))
         
         real_preds_idx = [lab if lab != x_label else o_label for lab in logits[preds_mask]]
-        real_labels_idx = evaluate_labels[preds_mask]
-        
-        assert len(real_preds_idx) == len(real_labels_idx)
-        
-        real_preds_tags = self.convert_to_labels(real_preds_idx)
-        real_labels_tags = self.convert_to_labels(real_labels_idx)
-          
-        return real_preds_tags, real_labels_tags
-    
- class BlstmForNerBinary(BlstmForNer):
-    
-    def __init__(self, bert_model_path, labels,**kwargs):
-        super().__init__(bert_model_path, labels, **kwargs)
-    
-    def _build_model(self):
-         
-        self.bert_model = self.bert_embedding_layer()
-        self.features_models = self.features_layers()
-        
-        if self.features_models == []:
-          inputs = self.bert_model.input 
-          embedding_layer = self.bert_model.output
-        else:
-          models = [self.bert_model] + self.features_models
-          inputs = [model.input for model in models]
-          embedding_layer = Concatenate(axis=-1, name='concat_layer')([model.output for model in models])
-
-          
-        blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True, dropout=self.dropout))(embedding_layer)
-        outputs = TimeDistributed(Dense(len(self.labels), activation='sigmoide'))(blstm)
-        
-        blstm_model = Model(inputs=inputs, outputs=outputs)
-
-        print(blstm_model.summary())
-        
-    def train(self, train_inputs, train_labels, validation_data=(), num_epochs=50, 
-              learning_rate=1e-3, batch=32, decay_steps=1.0, decay_rate=1e-5,
-              callback=[]):
-        
-        schedule = schedules.InverseTimeDecay(learning_rate, 
-                                              decay_steps, 
-                                              decay_rate, 
-                                              staircase=False)
-        optimizer = Adam(learning_rate=schedule)
-        
-        self.blstm_crf_model.compile(optimizer=optimizer)
-
-        self.blstm_crf_model.fit(train_inputs, train_labels,
-            validation_data= validation_data, epochs= num_epochs,
-            batch_size=batch, callbacks=callback)
-
-    def evaluate(self, evaluate_inputs, evaluate_labels, is_max_context, batch_size=32):
-    
-        x_label = self.lab_to_ind['X']
-        o_label = self.lab_to_ind['O']
-        
-        logits = self.blstm_crf_model.predict(evaluate_inputs, batch_size=batch_size)
-                    
-        preds_mask = ((evaluate_labels != [x_label]) & (is_max_context))
-        
-        real_preds_idx = [lab if lab != x_label else o_label for lab in np.argmax(logits[preds_mask], axis=-1)]
         real_labels_idx = evaluate_labels[preds_mask]
         
         assert len(real_preds_idx) == len(real_labels_idx)
