@@ -129,6 +129,17 @@ class BlstmForNer(object):
         
       return layers
   
+    def compute_mask(self, inputs):
+        
+        mask_layer = Embedding(30, 10, input_length=self.max_len, mask_zero=True)
+        
+        if len(inputs) == 3:
+            mask = mask_layer.compute_mask(inputs[1])
+        else:
+            mask = mask_layer.compute_mask(inputs[3])
+            
+        return mask
+  
     def _build_model(self):
        
         self.bert_model = self.bert_embedding_layer()
@@ -141,8 +152,10 @@ class BlstmForNer(object):
           models = [self.bert_model] + self.features_models
           inputs = [model.input for model in models]
           embedding_layer = Concatenate(axis=-1, name='concat_layer')([model.output for model in models])
+         
+        mask = self.compute_mask(inputs) 
           
-        blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True, dropout=self.dropout))(embedding_layer)
+        blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True, dropout=self.dropout))(embedding_layer, mask=mask)
         outputs = TimeDistributed(Dense(len(self.labels), activation='softmax'))(blstm)
         
         self.blstm_model = Model(inputs=inputs, outputs=outputs)
@@ -208,18 +221,7 @@ class BlstmForNerCRF(BlstmForNer):
     def __init__(self, bert_model_path, labels,**kwargs):
         super().__init__(bert_model_path, labels, **kwargs)
         self.crf = CRF(len(self.labels))
-        
-    def compute_mask(self, inputs):
-   
-        mask_layer = Embedding(30, 10, input_length=self.max_len)
-    
-        if len(inputs) == 3:
-            mask = mask_layer.compute_mask(inputs[1])
-        else:
-            mask = mask_layer.compute_mask(inputs[3])
             
-        return mask
-    
     def _build_model(self):
          
         self.bert_model = self.bert_embedding_layer()
