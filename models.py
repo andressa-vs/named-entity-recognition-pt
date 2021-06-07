@@ -215,7 +215,7 @@ class BlstmForNerCRF(BlstmForNer):
         self.features_models = self.features_layers()
         
         if mask_zero:
-            mask = Embedding(10, 10, input_length=self.max_len)
+            mask = Embedding(30, 10, input_length=self.max_len)
         
         if self.features_models == []:
           inputs = self.bert_model.input 
