@@ -239,7 +239,7 @@ class BlstmForNerCRF(BlstmForNer):
         mask = self.compute_mask(inputs)
           
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True, dropout=self.dropout))(embedding_layer, mask=mask)
-        time_dist = TimeDistributed(Dense(self.lstm_layer, activation=None))(blstm)
+        time_dist = TimeDistributed(Dense(self.lstm_layer, activation='relu'))(blstm)
         outputs = self.crf(time_dist)
         
         blstm_model = Model(inputs=inputs, outputs=outputs)
