@@ -58,12 +58,12 @@ def convert_example_to_spans(examples,
                            scenario,
                            extra_features_names=None, 
                            doc_max_len=512, 
-                          doc_stride=128):
+                          doc_stride=128,
+                          bio_encoding=True):
     
 
     all_docs_features = []         
-    tags_list = tag_encoder(scenario)
-    tags_to_ids = {index: tag for tag, index in enumerate(tags_list)}
+    tags_to_ids = tag_encoder(scenario, bio_encoding) 
     features_dic = features(extra_features_names, scenario)
     
     
