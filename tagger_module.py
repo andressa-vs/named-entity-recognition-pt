@@ -19,7 +19,7 @@ TOTAL_CLASSES = ['PESSOA','LOCAL','ORGANIZAÇÃO', 'TEMPO','VALOR','OUTRO',
 
 SELECTIVE_CLASSES = ['PESSOA','LOCAL','ORGANIZAÇÃO','TEMPO','VALOR']
 
-def tag_encoder(scenario):
+def tag_encoder(scenario, bio_encoding=True):
     
     if scenario.lower() not in ["selective","total"]:
         raise ValueError("Scenario must be 'selective' or 'total'")
@@ -32,11 +32,14 @@ def tag_encoder(scenario):
         classes = TOTAL_CLASSES
     
     for entity_class in classes:
-        begin_class = 'B-{}'.format(entity_class[:3])
-        inside_class = 'I-{}'.format(entity_class[:3])
-        entities_tags.extend((begin_class, inside_class))
+        if bio_encoding:
+            begin_class = 'B-{}'.format(entity_class[:3])
+            inside_class = 'I-{}'.format(entity_class[:3])
+            entities_tags.extend((begin_class, inside_class))
+        else:
+            entities_tags.append(entity_class[:3])
         
-    return entities_tags
+    return {tag: index for index, tag in enumerate(entities_tags)}
 
 def get_word_type(token):
     
