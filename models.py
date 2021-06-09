@@ -131,12 +131,8 @@ class BlstmForNer(object):
   
     def compute_mask(self, inputs):
         
-        mask_layer = Embedding(30, 10, input_length=self.max_len, mask_zero=True)
-        
-        if len(inputs) == 3:
-            mask = mask_layer.compute_mask(inputs[1])
-        else:
-            mask = mask_layer.compute_mask(inputs[3])
+        mask_layer = Embedding(2, 10, input_length=self.max_len, mask_zero=True)
+        mask = mask_layer.compute_mask(inputs[1])
             
         return mask
   
@@ -241,7 +237,6 @@ class BlstmForNerCRF(BlstmForNer):
             mask = self.compute_mask(inputs)
           
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True, dropout=self.dropout))(embedding_layer, mask=mask)
-        #time_dist = TimeDistributed(Dense(self.lstm_layer, activation=None))(blstm)
         outputs = self.crf(blstm)
         
         blstm_model = Model(inputs=inputs, outputs=outputs)
