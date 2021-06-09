@@ -140,7 +140,7 @@ class BlstmForNer(object):
             
         return mask
   
-    def _build_model(self):
+    def _build_model(self, mask=None):
        
         self.bert_model = self.bert_embedding_layer()
         self.features_models = self.features_layers()
@@ -153,7 +153,8 @@ class BlstmForNer(object):
           inputs = [model.input for model in models]
           embedding_layer = Concatenate(axis=-1, name='concat_layer')([model.output for model in models])
          
-        mask = self.compute_mask(inputs) 
+        if mask:
+            mask = self.compute_mask(inputs) 
           
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True, dropout=self.dropout))(embedding_layer, mask=mask)
         outputs = TimeDistributed(Dense(len(self.labels), activation='softmax'))(blstm)
@@ -222,7 +223,7 @@ class BlstmForNerCRF(BlstmForNer):
         super().__init__(bert_model_path, labels, **kwargs)
         self.crf = CRF(len(self.labels))
             
-    def _build_model(self):
+    def _build_model(self, mask=None):
          
         self.bert_model = self.bert_embedding_layer()
         self.features_models = self.features_layers()
@@ -235,12 +236,13 @@ class BlstmForNerCRF(BlstmForNer):
           models = [self.bert_model] + self.features_models
           inputs = [model.input for model in models]
           embedding_layer = Concatenate(axis=-1, name='concat_layer')([model.output for model in models])
-         
-        mask = self.compute_mask(inputs)
+        
+        if mask:
+            mask = self.compute_mask(inputs)
           
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True, dropout=self.dropout))(embedding_layer, mask=mask)
-        time_dist = TimeDistributed(Dense(self.lstm_layer, activation='relu'))(blstm)
-        outputs = self.crf(time_dist)
+        #time_dist = TimeDistributed(Dense(self.lstm_layer, activation=None))(blstm)
+        outputs = self.crf(blstm)
         
         blstm_model = Model(inputs=inputs, outputs=outputs)
         self.blstm_crf_model = ModelWithCRFLoss(blstm_model, sparse_target=True)
