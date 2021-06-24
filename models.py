@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, Input, Embedding, LSTM, Bidirectional, TimeDistributed, Concatenate
+from tensorflow.keras.layers import Dense, Input, Embedding, LSTM, Bidirectional, TimeDistributed, Concatenate, BatchNormalization
 from tensorflow.keras.initializers import RandomUniform
 from transformers import TFBertModel
 import numpy as np
@@ -235,8 +235,9 @@ class BlstmForNerCRF(BlstmForNer):
         
         if mask:
             mask = self.compute_mask(inputs)
-          
-        blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True, dropout=self.dropout))(embedding_layer, mask=mask)
+        
+        normalization_layer = BatchNormalization()(embedding_layer)
+        blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True, dropout=self.dropout))(normalization_layer, mask=mask)
         outputs = self.crf(blstm)
         
         blstm_model = Model(inputs=inputs, outputs=outputs)
