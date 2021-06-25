@@ -236,7 +236,7 @@ class BlstmForNerCRF(BlstmForNer):
         if mask:
             mask = self.compute_mask(inputs)
         
-        dropout_layer = Droptout(self.dropout)(embedding_layer)
+        dropout_layer = Dropout(self.dropout)(embedding_layer)
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True, dropout=self.dropout))(dropout_layer, mask=mask)
         outputs = self.crf(blstm)
         
