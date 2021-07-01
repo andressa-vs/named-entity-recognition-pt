@@ -238,7 +238,8 @@ class BlstmForNerCRF(BlstmForNer):
         
         dropout_layer = Dropout(0.2)(embedding_layer)
         blstm = Bidirectional(LSTM(self.lstm_layer, return_sequences=True, dropout=self.dropout))(dropout_layer, mask=mask)
-        outputs = self.crf(blstm)
+        dropout_layer2 = Dropout(0.2)(blstm)
+        outputs = self.crf(dropout_layer2)
         
         blstm_model = Model(inputs=inputs, outputs=outputs)
         self.blstm_crf_model = ModelWithCRFLoss(blstm_model, sparse_target=True)
